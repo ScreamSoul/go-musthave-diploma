@@ -38,14 +38,14 @@ func (s *UserLoyaltyServer) UploadOrderHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	orderNumver, err := strconv.Atoi(string(buffer[:n]))
-	if err != nil || !luhn.Valid(orderNumver) {
-		s.logger.Warn("invalid order number format", zap.String("user_id", userID.String()))
+	orderNumber, err := strconv.Atoi(string(buffer[:n]))
+	if err != nil || !luhn.Valid(orderNumber) {
+		s.logger.Warn(err.Error(), zap.String("user_id", userID.String()))
 		http.Error(w, "invalid order number format", http.StatusUnprocessableEntity)
 		return
 	}
 
-	err = s.store.CreateOrder(r.Context(), orderNumver, userID)
+	err = s.loyaltyRepo.CreateOrder(r.Context(), orderNumber, userID)
 
 	if errors.Is(err, repositories.ErrOrderAlreadyUpload) {
 		w.WriteHeader(http.StatusOK)
@@ -55,6 +55,7 @@ func (s *UserLoyaltyServer) UploadOrderHandler(w http.ResponseWriter, r *http.Re
 		s.logger.Error(err.Error(), zap.String("user_id", userID.String()))
 		http.Error(w, "Interanl error", http.StatusInternalServerError)
 	} else {
+		s.orderChain <- orderNumber
 		w.WriteHeader(http.StatusAccepted)
 	}
 }
@@ -68,7 +69,7 @@ func (s *UserLoyaltyServer) ListOrdersHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	orders, err := s.store.ListOrders(r.Context(), userID)
+	orders, err := s.loyaltyRepo.ListOrders(r.Context(), userID)
 
 	if err != nil {
 		s.logger.Error(err.Error(), zap.String("user_id", userID.String()))

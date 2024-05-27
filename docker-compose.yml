@@ -1,7 +1,15 @@
 version: "3"
 services:
+  accural:
+    container_name: accural
+    build: 
+      dockerfile: docker/accural/Dockerfile
+      context: .
+    ports:
+      - "8001:8080"
+
   postgres-db:
-    container_name: metric-postgres-db
+    container_name: loyalty-postgres-db
     image: postgres:15.4-alpine3.18
     volumes:
       - ${DATA_PATH}/postgres:/var/lib/postgresql/data

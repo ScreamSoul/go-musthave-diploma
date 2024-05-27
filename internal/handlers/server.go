@@ -7,12 +7,13 @@ import (
 )
 
 type UserLoyaltyServer struct {
-	store  repositories.UserLoyaltyRepository
-	logger *zap.Logger
+	loyaltyRepo repositories.UserLoyaltyRepository
+	logger      *zap.Logger
+	orderChain  chan int
 }
 
-func NewUserLoyaltyServer(loyaltyRepo repositories.UserLoyaltyRepository) *UserLoyaltyServer {
+func NewUserLoyaltyServer(loyaltyRepo repositories.UserLoyaltyRepository, orderChain chan int) *UserLoyaltyServer {
 	logger := logging.GetLogger()
 
-	return &UserLoyaltyServer{store: loyaltyRepo, logger: logger}
+	return &UserLoyaltyServer{loyaltyRepo: loyaltyRepo, orderChain: orderChain, logger: logger}
 }

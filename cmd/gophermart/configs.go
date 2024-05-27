@@ -22,7 +22,8 @@ type Config struct {
 	JWT
 	ListenAddress       string `arg:"-a,env:RUN_ADDRESS" default:"localhost:8080" help:"Адрес и порт сервера"`
 	LogLevel            string `arg:"--ll,env:LOG_LEVEL" default:"INFO" help:"Уровень логирования"`
-	ActualSystemAddress string `arg:"-r,env:ACCRUAL_SYSTEM_ADDRESS" default:"localhost:8081" help:"Адрес системы расчёта начислений"`
+	ActualSystemAddress string `arg:"-r,env:ACCRUAL_SYSTEM_ADDRESS" default:"http://localhost:8001" help:"Адрес системы расчёта начислений"`
+	AccuralCheckerLimit int    `arg:"-r,env:ACCRUAL_CHECKER_LIMIT" default:"5" help:"Количество одновременных обращений к системе расчёта начислений"`
 }
 
 func NewConfig() (*Config, error) {

@@ -27,3 +27,5 @@ vendor/
 /docker_data
 *.json
 .env
+
+__debug_*

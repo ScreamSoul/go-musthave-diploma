@@ -10,7 +10,7 @@ import (
 //go:embed migrations/*.sql
 var embedMigrations embed.FS
 
-func (storage *PostgresStorage) Bootstrap(ctx context.Context) error {
+func (storage *PostgresRepository) Bootstrap(ctx context.Context) error {
 	goose.SetBaseFS(embedMigrations)
 
 	if err := goose.SetDialect("postgres"); err != nil {

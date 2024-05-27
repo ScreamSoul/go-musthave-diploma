@@ -14,17 +14,19 @@ import (
 func (s *UserLoyaltyServer) RegistrationHandler(w http.ResponseWriter, r *http.Request) {
 	var creds models.Creds
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		s.logger.Error(err.Error(), zap.Any("body", creds))
+		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
 
-	userID, err := s.store.CreateUser(r.Context(), &creds)
+	userID, err := s.loyaltyRepo.CreateUser(r.Context(), &creds)
 
 	if err != nil {
 		if errors.Is(err, repositories.ErrUserAlreadyExists) {
 			http.Error(w, err.Error(), http.StatusConflict)
 		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			s.logger.Error(err.Error(), zap.Any("body", creds))
+			http.Error(w, "Internal error", http.StatusInternalServerError)
 		}
 		return
 	}
@@ -50,7 +52,7 @@ func (s *UserLoyaltyServer) LoginHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	userID, err := s.store.CheckUserPassword(r.Context(), &creds)
+	userID, err := s.loyaltyRepo.CheckUserPassword(r.Context(), &creds)
 
 	if err != nil {
 		if errors.Is(err, repositories.ErrInvalidCredentials) {

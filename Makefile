@@ -1,13 +1,15 @@
 FORCE:
 
-DOCKER_COMPOSE_DB=docker-compose.yml
+DOCKER_COMPOSE=docker-compose.yml
 
+build:
+	docker-compose -f ${DOCKER_COMPOSE} build
 
-up-db:
-	docker-compose -f ${DOCKER_COMPOSE_DB} up  -d
+up:
+	docker-compose -f ${DOCKER_COMPOSE} up  -d
 
-down-db:
-	docker-compose -f ${DOCKER_COMPOSE_DB} down 
+down:
+	docker-compose -f ${DOCKER_COMPOSE} down 
 
-logs-db:
-	docker-compose -f ${DOCKER_COMPOSE_DB} logs 
+logs:
+	docker-compose -f ${DOCKER_COMPOSE} logs 

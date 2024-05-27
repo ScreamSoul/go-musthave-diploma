@@ -25,7 +25,5 @@ func main() {
 
 	logger := logging.GetLogger()
 
-	if err := app(ctx, cfg, logger); err != nil {
-		panic(err)
-	}
+	start(ctx, cfg, logger)
 }

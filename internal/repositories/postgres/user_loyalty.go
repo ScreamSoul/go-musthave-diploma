@@ -5,10 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -16,56 +14,28 @@ import (
 	"github.com/screamsoul/go-musthave-diploma/internal/models"
 	"github.com/screamsoul/go-musthave-diploma/internal/repositories"
 	"github.com/screamsoul/go-musthave-diploma/pkg/backoff"
-	"github.com/screamsoul/go-musthave-diploma/pkg/logging"
-	"go.uber.org/zap"
 )
 
-type PostgresStorage struct {
-	db               *sqlx.DB
-	logging          *zap.Logger
-	backoffInteraval []time.Duration
-}
+func (storage *PostgresRepository) CreateUser(ctx context.Context, creds *models.Creds) (uuid.UUID, error) {
 
-func NewPostgresStorage(dataSourceName string, backoffInteraval []time.Duration) *PostgresStorage {
-	db := sqlx.MustOpen("pgx", dataSourceName)
-
-	return &PostgresStorage{db, logging.GetLogger(), backoffInteraval}
-}
-
-func (storage *PostgresStorage) Ping(ctx context.Context) bool {
-	err := storage.db.PingContext(ctx)
-	if err != nil {
-		storage.logging.Error("db connect error", zap.Error(err))
-	}
-	return err == nil
-}
-
-func (storage *PostgresStorage) Close() {
-	err := storage.db.Close()
-	if err != nil {
-		storage.logging.Error("db close connection error", zap.Error(err))
-	}
-}
-
-func (storage *PostgresStorage) CreateUser(ctx context.Context, creds *models.Creds) (uuid.UUID, error) {
 	userID := uuid.New()
-	stmt, err := storage.db.PrepareContext(ctx, `
-		INSERT INTO users (id, login, password_hash)
-		VALUES ($1, $2, $3)
-	`)
 
+	tx, err := storage.db.Begin()
 	if err != nil {
 		return uuid.Nil, err
 	}
-	defer stmt.Close()
 
-	exec := func() error {
-		_, err = stmt.ExecContext(ctx, userID, creds.Login, creds.Password)
+	create_user := func() error {
+		_, err = tx.ExecContext(ctx,
+			`INSERT INTO users (id, login, password_hash) VALUES ($1, $2, $3)`,
+			userID, creds.Login, creds.Password)
+		if err != nil {
+			tx.Rollback()
+		}
 		return err
 	}
-
-	err = backoff.RetryWithBackoff(storage.backoffInteraval, IsTemporaryConnectionError, exec)
 	var pgErr *pgconn.PgError
+	err = backoff.RetryWithBackoff(storage.backoffInteraval, IsTemporaryConnectionError, create_user)
 	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 		err = repositories.ErrUserAlreadyExists
 	} else if err != nil {
@@ -76,11 +46,31 @@ func (storage *PostgresStorage) CreateUser(ctx context.Context, creds *models.Cr
 		return uuid.Nil, err
 	}
 
+	create_loyalty_wallet := func() error {
+		_, err = tx.ExecContext(ctx,
+			`INSERT INTO loyalty_wallets (user_id, balance, spent_points_total) VALUES ($1, 0, 0)`,
+			userID)
+		if err != nil {
+			tx.Rollback()
+		}
+		return err
+	}
+
+	err = backoff.RetryWithBackoff(storage.backoffInteraval, IsTemporaryConnectionError, create_loyalty_wallet)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return uuid.Nil, err
+	}
+
 	return userID, nil
 
 }
 
-func (storage *PostgresStorage) CheckUserPassword(ctx context.Context, creds *models.Creds) (userID uuid.UUID, err error) {
+func (storage *PostgresRepository) CheckUserPassword(ctx context.Context, creds *models.Creds) (userID uuid.UUID, err error) {
 	query := "SELECT id FROM users WHERE login = $1 and password_hash = $2"
 
 	exec := func() error {
@@ -101,7 +91,7 @@ func (storage *PostgresStorage) CheckUserPassword(ctx context.Context, creds *mo
 	return userID, nil
 }
 
-func (storage *PostgresStorage) CreateOrder(ctx context.Context, orderNumber int, userId uuid.UUID) error {
+func (storage *PostgresRepository) CreateOrder(ctx context.Context, orderNumber int, userId uuid.UUID) error {
 	query := "SELECT COUNT(*) FROM orders WHERE number = $1 and user_id = $2"
 	var count int
 	check_exists := func() error {
@@ -146,7 +136,7 @@ func (storage *PostgresStorage) CreateOrder(ctx context.Context, orderNumber int
 	return nil
 }
 
-func (storage *PostgresStorage) ListOrders(ctx context.Context, userID uuid.UUID) (orders []models.Order, err error) {
+func (storage *PostgresRepository) ListOrders(ctx context.Context, userID uuid.UUID) (orders []models.Order, err error) {
 	query := `SELECT number, status, accrual, uploaded_at FROM orders WHERE user_id = $1`
 	exec := func() error {
 		return storage.db.SelectContext(ctx, &orders, query, userID)
