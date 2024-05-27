@@ -1,0 +1,22 @@
+version: "3"
+services:
+  golangci:
+    container_name: golangci
+    platform: linux/amd64
+    build: 
+      dockerfile: docker/statictest/Dockerfile
+      context: .
+    image: staticlinter-image
+    command: golangci-lint run ./...
+    volumes:
+      - "${DATA_PATH}/.cache/golangci-lint/v1.59.0:/root/.cache"
+      - "./src:/app"
+    
+  statictest:
+    container_name: statictest
+    platform: linux/amd64
+    image: staticlinter-image
+    command: go vet -vettool=/statictest ./...
+    volumes:
+      - "${DATA_PATH}/.cache/statictest_cache:/root/.cache"
+      - "./src:/app"

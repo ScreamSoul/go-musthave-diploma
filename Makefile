@@ -1,9 +1,17 @@
 FORCE:
 
 DOCKER_COMPOSE=docker-compose.yml
+DOCKER_COMPOSE_TESTS=docker-compose.tests.yml
+
+tests-build:
+	docker-compose -f ${DOCKER_COMPOSE_TESTS} build --force-rm
+
+tests-up:
+	docker-compose -f ${DOCKER_COMPOSE_TESTS} up
+	docker-compose -f ${DOCKER_COMPOSE_TESTS} down
 
 build:
-	docker-compose -f ${DOCKER_COMPOSE} build
+	docker-compose -f ${DOCKER_COMPOSE} build --force-rm
 
 up:
 	docker-compose -f ${DOCKER_COMPOSE} up  -d
