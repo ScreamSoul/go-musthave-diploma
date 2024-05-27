@@ -11,7 +11,7 @@ import (
 
 type PostgresRepository struct {
 	db               *sqlx.DB
-	logging          *zap.Logger
+	logger           *zap.Logger
 	backoffInteraval []time.Duration
 }
 
@@ -21,17 +21,17 @@ func NewPostgresRepository(dataSourceName string, backoffInteraval []time.Durati
 	return &PostgresRepository{db, logging.GetLogger(), backoffInteraval}
 }
 
-func (storage *PostgresRepository) Ping(ctx context.Context) bool {
-	err := storage.db.PingContext(ctx)
+func (r *PostgresRepository) Ping(ctx context.Context) bool {
+	err := r.db.PingContext(ctx)
 	if err != nil {
-		storage.logging.Error("db connect error", zap.Error(err))
+		r.logger.Error("db connect error", zap.Error(err))
 	}
 	return err == nil
 }
 
-func (storage *PostgresRepository) Close() {
-	err := storage.db.Close()
+func (r *PostgresRepository) Close() {
+	err := r.db.Close()
 	if err != nil {
-		storage.logging.Error("db close connection error", zap.Error(err))
+		r.logger.Error("db close connection error", zap.Error(err))
 	}
 }

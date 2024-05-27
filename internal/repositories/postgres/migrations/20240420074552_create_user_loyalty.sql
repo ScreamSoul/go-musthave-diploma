@@ -20,7 +20,7 @@ CREATE TABLE orders (
 CREATE TABLE loyalty_wallets (
     user_id UUID REFERENCES "users"(id) ON DELETE CASCADE,
     balance INTEGER CHECK (balance >= 0) NOT NULL DEFAULT 0,
-    spent_points_total INTEGER CHECK (spent_points_total >= 0) NOT NULL DEFAULT 0,
+    spent INTEGER CHECK (spent >= 0) NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id)
 );
 

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 func TestRetryWithBackoff(t *testing.T) {
@@ -49,7 +50,7 @@ func TestRetryWithBackoff(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := RetryWithBackoff(tt.backoffIntervals, tt.shouldRetry, tt.fn)
+			err := RetryWithBackoff(tt.backoffIntervals, tt.shouldRetry, zap.NewNop(), tt.fn)
 			assert.Equal(t, tt.expectedError, err)
 		})
 	}

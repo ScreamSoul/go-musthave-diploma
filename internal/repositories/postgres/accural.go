@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/screamsoul/go-musthave-diploma/internal/models"
@@ -23,8 +22,8 @@ func (r *PostgresRepository) UpdateOrderAccural(ctx context.Context, orderAccura
 	}
 
 	// update accural and status in orders by number and get user_id
-	var res sql.Result
-	res, err = tx.ExecContext(
+
+	_, err = tx.ExecContext(
 		ctx, `UPDATE orders SET accrual = $1, status = $2 WHERE number = $3`,
 		orderAccural.Accrual, orderAccural.Status, orderAccural.Order,
 	)
@@ -32,9 +31,9 @@ func (r *PostgresRepository) UpdateOrderAccural(ctx context.Context, orderAccura
 		tx.Rollback()
 		return err
 	}
-	fmt.Print(res.RowsAffected())
 
-	if orderAccural.Accrual == 0 || orderAccural.Status != models.StatusProcessed {
+	// commit and return if not accural or not final status
+	if orderAccural.Accrual == nil || *orderAccural.Accrual == 0 || !orderAccural.Status.IsFinal() {
 		return tx.Commit()
 	}
 

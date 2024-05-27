@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"github.com/google/uuid"
 
@@ -16,11 +15,11 @@ import (
 	"github.com/screamsoul/go-musthave-diploma/pkg/backoff"
 )
 
-func (storage *PostgresRepository) CreateUser(ctx context.Context, creds *models.Creds) (uuid.UUID, error) {
+func (r *PostgresRepository) CreateUser(ctx context.Context, creds *models.Creds) (uuid.UUID, error) {
 
 	userID := uuid.New()
 
-	tx, err := storage.db.Begin()
+	tx, err := r.db.Begin()
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -35,11 +34,9 @@ func (storage *PostgresRepository) CreateUser(ctx context.Context, creds *models
 		return err
 	}
 	var pgErr *pgconn.PgError
-	err = backoff.RetryWithBackoff(storage.backoffInteraval, IsTemporaryConnectionError, create_user)
+	err = backoff.RetryWithBackoff(r.backoffInteraval, IsTemporaryConnectionError, r.logger, create_user)
 	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 		err = repositories.ErrUserAlreadyExists
-	} else if err != nil {
-		err = fmt.Errorf("failed retries db request, %w", err)
 	}
 
 	if err != nil {
@@ -48,7 +45,7 @@ func (storage *PostgresRepository) CreateUser(ctx context.Context, creds *models
 
 	create_loyalty_wallet := func() error {
 		_, err = tx.ExecContext(ctx,
-			`INSERT INTO loyalty_wallets (user_id, balance, spent_points_total) VALUES ($1, 0, 0)`,
+			`INSERT INTO loyalty_wallets (user_id, balance, spent) VALUES ($1, 0, 0)`,
 			userID)
 		if err != nil {
 			tx.Rollback()
@@ -56,7 +53,7 @@ func (storage *PostgresRepository) CreateUser(ctx context.Context, creds *models
 		return err
 	}
 
-	err = backoff.RetryWithBackoff(storage.backoffInteraval, IsTemporaryConnectionError, create_loyalty_wallet)
+	err = backoff.RetryWithBackoff(r.backoffInteraval, IsTemporaryConnectionError, r.logger, create_loyalty_wallet)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -70,18 +67,16 @@ func (storage *PostgresRepository) CreateUser(ctx context.Context, creds *models
 
 }
 
-func (storage *PostgresRepository) CheckUserPassword(ctx context.Context, creds *models.Creds) (userID uuid.UUID, err error) {
+func (r *PostgresRepository) CheckUserPassword(ctx context.Context, creds *models.Creds) (userID uuid.UUID, err error) {
 	query := "SELECT id FROM users WHERE login = $1 and password_hash = $2"
 
 	exec := func() error {
-		return storage.db.GetContext(ctx, &userID, query, creds.Login, creds.Password)
+		return r.db.GetContext(ctx, &userID, query, creds.Login, creds.Password)
 	}
 
-	err = backoff.RetryWithBackoff(storage.backoffInteraval, IsTemporaryConnectionError, exec)
+	err = backoff.RetryWithBackoff(r.backoffInteraval, IsTemporaryConnectionError, r.logger, exec)
 	if err == sql.ErrNoRows {
 		err = repositories.ErrInvalidCredentials
-	} else if err != nil {
-		err = fmt.Errorf("failed retries db request, %w", err)
 	}
 
 	if err != nil {
@@ -91,22 +86,22 @@ func (storage *PostgresRepository) CheckUserPassword(ctx context.Context, creds 
 	return userID, nil
 }
 
-func (storage *PostgresRepository) CreateOrder(ctx context.Context, orderNumber int, userId uuid.UUID) error {
+func (r *PostgresRepository) CreateOrder(ctx context.Context, orderNumber int, userId uuid.UUID) error {
 	query := "SELECT COUNT(*) FROM orders WHERE number = $1 and user_id = $2"
 	var count int
 	check_exists := func() error {
-		return storage.db.GetContext(ctx, &count, query, orderNumber, userId)
+		return r.db.GetContext(ctx, &count, query, orderNumber, userId)
 	}
 
-	err := backoff.RetryWithBackoff(storage.backoffInteraval, IsTemporaryConnectionError, check_exists)
+	err := backoff.RetryWithBackoff(r.backoffInteraval, IsTemporaryConnectionError, r.logger, check_exists)
 	if err != nil && err != sql.ErrNoRows {
-		return fmt.Errorf("failed retries db request, %w", err)
+		return err
 	}
 	if count > 0 {
 		return repositories.ErrOrderAlreadyUpload
 	}
 
-	stmt, err := storage.db.PrepareContext(ctx, `
+	stmt, err := r.db.PrepareContext(ctx, `
 		INSERT INTO orders (number, user_id)
 		VALUES ($1, $2)
 	`)
@@ -121,12 +116,10 @@ func (storage *PostgresRepository) CreateOrder(ctx context.Context, orderNumber 
 		return err
 	}
 
-	err = backoff.RetryWithBackoff(storage.backoffInteraval, IsTemporaryConnectionError, exec)
+	err = backoff.RetryWithBackoff(r.backoffInteraval, IsTemporaryConnectionError, r.logger, exec)
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 		err = repositories.ErrOrderConflict
-	} else if err != nil {
-		err = fmt.Errorf("failed retries db request, %w", err)
 	}
 
 	if err != nil {
@@ -136,15 +129,15 @@ func (storage *PostgresRepository) CreateOrder(ctx context.Context, orderNumber 
 	return nil
 }
 
-func (storage *PostgresRepository) ListOrders(ctx context.Context, userID uuid.UUID) (orders []models.Order, err error) {
+func (r *PostgresRepository) ListOrders(ctx context.Context, userID uuid.UUID) (orders []models.Order, err error) {
 	query := `SELECT number, status, accrual, uploaded_at FROM orders WHERE user_id = $1`
 	exec := func() error {
-		return storage.db.SelectContext(ctx, &orders, query, userID)
+		return r.db.SelectContext(ctx, &orders, query, userID)
 	}
 
-	err = backoff.RetryWithBackoff(storage.backoffInteraval, IsTemporaryConnectionError, exec)
+	err = backoff.RetryWithBackoff(r.backoffInteraval, IsTemporaryConnectionError, r.logger, exec)
 	if err != nil {
-		err = fmt.Errorf("failed retries db request, %w", err)
+		return nil, err
 	}
 
 	return

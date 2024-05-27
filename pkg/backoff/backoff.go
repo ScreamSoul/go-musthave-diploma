@@ -1,10 +1,15 @@
 package backoff
 
-import "time"
+import (
+	"time"
+
+	"go.uber.org/zap"
+)
 
 func RetryWithBackoff(
 	backoffIntervals []time.Duration,
 	shouldRetry func(error) bool,
+	logger *zap.Logger,
 	fn func() error,
 ) error {
 	var err error
@@ -20,9 +25,11 @@ func RetryWithBackoff(
 		}
 		if shouldRetry(err) {
 			if i < len(backoffIntervals) {
+				logger.Warn("retry with err", zap.Error(err))
 				time.Sleep(backoffIntervals[i])
 			}
 		} else {
+			logger.Warn("failed retries with err", zap.Error(err))
 			return err
 		}
 
