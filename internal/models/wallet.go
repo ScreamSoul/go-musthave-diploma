@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 )
 
 type UserWallet struct {
@@ -12,8 +13,9 @@ type UserWallet struct {
 }
 
 type Withdraw struct {
-	Order  int `json:"order"`
-	Amount int `json:"sum"`
+	Order       int       `json:"order" db:"order_number"`
+	Amount      int       `json:"sum" db:"amount"`
+	ProcessedAt time.Time `json:"processed_at,omitempty" db:"processed_at,omitempty"`
 }
 
 func (w *Withdraw) UnmarshalJSON(data []byte) error {

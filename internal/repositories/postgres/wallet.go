@@ -67,3 +67,21 @@ func (r *PostgresRepository) WithdrawWallet(ctx context.Context, userID uuid.UUI
 	}
 	return tx.Commit()
 }
+
+func (r *PostgresRepository) GetWithdrawals(ctx context.Context, userID uuid.UUID) (withdraws []models.Withdraw, err error) {
+	query := `SELECT order_number, amount, processed_at FROM loyalty_wallet_operations WHERE user_id = $1 ORDER BY processed_at`
+	err = backoff.RetryWithBackoff(
+		r.backoffInteraval,
+		IsTemporaryConnectionError,
+		r.logger,
+		func() error {
+			return r.db.SelectContext(ctx, &withdraws, query, userID)
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	return
+
+}

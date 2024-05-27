@@ -77,3 +77,37 @@ func (s *UserLoyaltyServer) WithdrawWallet(w http.ResponseWriter, r *http.Reques
 
 	w.WriteHeader(http.StatusOK)
 }
+
+func (s *UserLoyaltyServer) ListWithdraws(w http.ResponseWriter, r *http.Request) {
+
+	userID, ok := r.Context().Value(types.UserID).(uuid.UUID)
+
+	if !ok {
+		s.logger.Error("Failed to extract user ID from context", zap.String("user_id", userID.String()))
+		http.Error(w, "Interanl error", http.StatusInternalServerError)
+		return
+	}
+
+	withdraws, err := s.loyaltyRepo.GetWithdrawals(r.Context(), userID)
+
+	if err != nil {
+		s.logger.Error(err.Error(), zap.String("user_id", userID.String()))
+
+		http.Error(w, "Interanl error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if len(withdraws) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	if err := json.NewEncoder(w).Encode(withdraws); err != nil {
+		s.logger.Error("Error writing response", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}

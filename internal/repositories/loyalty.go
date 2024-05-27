@@ -20,4 +20,5 @@ type UserLoyaltyRepository interface {
 
 	GetWallet(ctx context.Context, userID uuid.UUID) (*models.UserWallet, error)
 	WithdrawWallet(ctx context.Context, userID uuid.UUID, withdraw *models.Withdraw) error
+	GetWithdrawals(ctx context.Context, userID uuid.UUID) ([]models.Withdraw, error)
 }

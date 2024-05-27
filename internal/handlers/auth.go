@@ -12,16 +12,16 @@ import (
 )
 
 func (s *UserLoyaltyServer) RegistrationHandler(w http.ResponseWriter, r *http.Request) {
+
+	var creds models.Creds
 	contentType := r.Header.Get("Content-Type")
+
 	if contentType != "application/json" {
 		http.Error(w, "content type must be application/json", http.StatusBadRequest)
 		return
-	}
-
-	var creds models.Creds
-	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
+	} else if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
 		s.logger.Error(err.Error(), zap.Any("body", creds))
-		http.Error(w, "", http.StatusBadRequest)
+		http.Error(w, "bad body format", http.StatusBadRequest)
 		return
 	}
 
@@ -48,7 +48,7 @@ func (s *UserLoyaltyServer) RegistrationHandler(w http.ResponseWriter, r *http.R
 
 	http.SetCookie(w, &cookie)
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *UserLoyaltyServer) LoginHandler(w http.ResponseWriter, r *http.Request) {
