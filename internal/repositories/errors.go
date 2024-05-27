@@ -13,3 +13,5 @@ var ErrOrderAlreadyUpload = errors.New("the order number has already been upload
 var ErrInvalidAccural = errors.New("invali processing accural")
 
 var ErrManyRequests = errors.New("to many requests")
+
+var ErrLowBalance = errors.New("there are not enough funds in the account")

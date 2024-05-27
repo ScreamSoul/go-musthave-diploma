@@ -17,5 +17,7 @@ type UserLoyaltyRepository interface {
 	ListOrders(ctx context.Context, userID uuid.UUID) ([]models.Order, error)
 
 	UpdateOrderAccural(ctx context.Context, orderAccural *models.Accural) error
-	GetWalletInfo(ctx context.Context, userID uuid.UUID) (*models.UserWallet, error)
+
+	GetWallet(ctx context.Context, userID uuid.UUID) (*models.UserWallet, error)
+	WithdrawWallet(ctx context.Context, userID uuid.UUID, withdraw *models.Withdraw) error
 }

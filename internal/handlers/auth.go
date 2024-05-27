@@ -12,6 +12,12 @@ import (
 )
 
 func (s *UserLoyaltyServer) RegistrationHandler(w http.ResponseWriter, r *http.Request) {
+	contentType := r.Header.Get("Content-Type")
+	if contentType != "application/json" {
+		http.Error(w, "content type must be application/json", http.StatusBadRequest)
+		return
+	}
+
 	var creds models.Creds
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
 		s.logger.Error(err.Error(), zap.Any("body", creds))

@@ -25,11 +25,11 @@ CREATE TABLE loyalty_wallets (
 );
 
 CREATE TABLE loyalty_wallet_operations (
-    operation_id UUID PRIMARY KEY,
+    operation_id SERIAL PRIMARY KEY,
+    order_number INTEGER NOT NULL,
     user_id UUID REFERENCES "users"(id) ON DELETE CASCADE,
-    order_id INTEGER REFERENCES "orders"(number) ON DELETE SET NULL,
-    amount_deducted INTEGER CHECK (amount_deducted >= 0) NOT NULL DEFAULT 0,
-    operation_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    amount INTEGER CHECK (amount >= 0) NOT NULL DEFAULT 0,
+    processed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Составной индекс для оптимизации запросов по пользователю

@@ -24,6 +24,7 @@ func NewUserLoyaltyRouter(
 	r.With(middlewares.LoginRequiredMiddleware).Post("/api/user/orders", uServer.UploadOrderHandler)
 	r.With(middlewares.LoginRequiredMiddleware).Get("/api/user/orders", uServer.ListOrdersHandler)
 	r.With(middlewares.LoginRequiredMiddleware).Get("/api/user/balance", uServer.LoyaltyBalance)
+	r.With(middlewares.LoginRequiredMiddleware).Post("/api/user/balance/withdraw", uServer.WithdrawWallet)
 
 	return r
 }
