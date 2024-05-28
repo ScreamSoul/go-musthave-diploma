@@ -1,9 +1,11 @@
 FROM golang:1.22
 
-WORKDIR /usr/app
+WORKDIR /app
 
-COPY docker/gophermarttest/gophermarttest-darwin-amd64 ./
+RUN curl -sSfL -o /gophermarttest https://github.com/Yandex-Practicum/go-autotests/releases/download/v0.10.9/gophermarttest
+RUN chmod +x /gophermarttest
 
-EXPOSE 8080
+COPY docker/gophermarttest/entrypoint.sh /
+RUN chmod +x /entrypoint.sh
 
-CMD ["./gophermarttest-darwin-amd64"]
+ENTRYPOINT [ "/entrypoint.sh" ]

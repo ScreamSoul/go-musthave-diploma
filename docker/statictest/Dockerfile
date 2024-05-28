@@ -7,7 +7,7 @@ RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/i
 COPY docker/statictest/entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 
-COPY docker/statictest/statictest /
+RUN curl -sSfl -o /statictest https://github.com/Yandex-Practicum/go-autotests/releases/download/v0.10.9/statictest
 RUN chmod +x /statictest
 
 ENTRYPOINT [ "/entrypoint.sh" ]
