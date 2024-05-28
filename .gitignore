@@ -29,3 +29,8 @@ vendor/
 .env
 
 __debug_*
+
+statictest
+gophermarttest
+gophermart
+src/Makefile

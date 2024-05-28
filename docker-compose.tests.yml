@@ -2,49 +2,53 @@ version: "3"
 
 
 services:
-  gophermarttest:
-    container_name: gophermarttest
-    platform: linux/amd64
-    build: 
-      dockerfile: docker/gophermarttest/Dockerfile
-      context: .
-    command: 
-      - ./gophermarttest
-      - -test.v
-      - -test.run=^TestGophermart$ 
-      - -gophermart-binary-path=cmd/gophermart/gophermart
-      - -gophermart-host=localhost 
-      - -gophermart-port=8080 
-      - -accrual-binary-path=cmd/accrual/accrual_linux_amd64 
-      - -gophermart-database-uri="host=test-postgres-db user=test-user password=test-password dbname=test-db sslmode=disable" 
-      - -accrual-database-uri="host=test-postgres-db user=test-user password=test-password dbname=test-db sslmode=disable" 
-      - -accrual-host=localhost 
-      - -accrual-port=8001 
-    volumes:
-      - "./src:/app"
-      - "${DATA_PATH}/.go/cache:/go/cache"
-    depends_on:
-      test-postgres-db:
-        condition: service_healthy
+  # gophermarttest:
+  #   container_name: gophermarttest
+  #   platform: linux/amd64
+  #   build: 
+  #     dockerfile: docker/gophermarttest/Dockerfile
+  #     context: .
+  #   image: gophermarttest-image
+  #   command: 
+  #     - ./gophermarttest
+  #     - -test.v
+  #     - -test.run=^TestGophermart$ 
+  #     - -gophermart-binary-path=cmd/gophermart/gophermart
+  #     - -gophermart-host=localhost 
+  #     - -gophermart-port=8080 
+  #     - -gophermart-database-uri="postgresql://test-user:test-password@test-postgres-db/test-db?sslmode=disable" 
+  #     - -accrual-binary-path=cmd/accrual/accrual_linux_amd64 
+  #     - -accrual-database-uri="postgresql://test-user:test-password@test-postgres-db/test-db?sslmode=disable" 
+  #     - -accrual-host=localhost 
+  #     - -accrual-port=8001 
+  #   volumes:
+  #     - "./src:/app"
+  #     - "${DATA_PATH}/.go:/go"
+  #   environment:
+  #     - RUN_ADDRESS=localhost:8080
+  #     - DATABASE_URI=postgresql://test-user:test-password@test-postgres-db/test-db?sslmode=disable
+  #   depends_on:
+  #     test-postgres-db:
+  #       condition: service_healthy
     
-  test-postgres-db:
-    image: postgres:15.4-alpine3.18
-    expose:
-      - 5432
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'",
-        ]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-    environment:
-      - LC_ALL=C.UTF-8
-      - POSTGRES_USER=test-user
-      - POSTGRES_PASSWORD=test-password
-      - POSTGRES_DB=test-db
+  # test-postgres-db:
+  #   image: postgres:15.4-alpine3.18
+  #   expose:
+  #     - 5432
+  #   healthcheck:
+  #     test:
+  #       [
+  #         "CMD-SHELL",
+  #         "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'",
+  #       ]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 3
+  #   environment:
+  #     - LC_ALL=C.UTF-8
+  #     - POSTGRES_USER=test-user
+  #     - POSTGRES_PASSWORD=test-password
+  #     - POSTGRES_DB=test-db
 
   golangci:
     container_name: golangci
@@ -56,15 +60,15 @@ services:
     command: golangci-lint run ./...
     volumes:
       - "${DATA_PATH}/.cache/golangci-lint/v1.59.0:/root/.cache"
-      - "${DATA_PATH}/.go/cache:/go/cache"
+      - "${DATA_PATH}/.go:/go"
       - "./src:/app"
     
   statictest:
     container_name: statictest
     platform: linux/amd64
     image: staticlinter-image
-    command: go vet -vettool=./statictest ./...
+    command: go vet -vettool=/statictest ./...
     volumes:
       - "${DATA_PATH}/.cache/statictest_cache:/root/.cache"
-      - "${DATA_PATH}/.go/cache:/go/cache"
+      - "${DATA_PATH}/.go:/go"
       - "./src:/app"

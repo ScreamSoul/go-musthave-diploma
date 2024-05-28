@@ -21,3 +21,6 @@ down:
 
 logs:
 	docker-compose -f ${DOCKER_COMPOSE} logs 
+
+
+

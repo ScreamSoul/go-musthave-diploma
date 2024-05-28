@@ -10,25 +10,25 @@ CREATE TABLE users (
 CREATE TYPE order_loading_status AS ENUM ('NEW', 'PROCESSING', 'INVALID', 'PROCESSED');
 
 CREATE TABLE orders (
-    number SERIAL PRIMARY KEY,
+    number BIGSERIAL PRIMARY KEY,
     user_id UUID REFERENCES "users"(id) ON DELETE CASCADE,
     status order_loading_status NOT NULL DEFAULT 'NEW',
-    accrual INTEGER CHECK (accrual >= 0),
+    accrual DECIMAL(11, 2) CHECK (accrual >= 0),
     uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE loyalty_wallets (
     user_id UUID REFERENCES "users"(id) ON DELETE CASCADE,
-    balance INTEGER CHECK (balance >= 0) NOT NULL DEFAULT 0,
-    spent INTEGER CHECK (spent >= 0) NOT NULL DEFAULT 0,
+    balance DECIMAL(11, 2) CHECK (balance >= 0) NOT NULL DEFAULT 0,
+    spent DECIMAL(11, 2) CHECK (spent >= 0) NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id)
 );
 
 CREATE TABLE loyalty_wallet_operations (
     operation_id SERIAL PRIMARY KEY,
-    order_number INTEGER NOT NULL,
+    order_number BIGINT NOT NULL,
     user_id UUID REFERENCES "users"(id) ON DELETE CASCADE,
-    amount INTEGER CHECK (amount >= 0) NOT NULL DEFAULT 0,
+    amount DECIMAL(11, 2) CHECK (amount >= 0) NOT NULL DEFAULT 0,
     processed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

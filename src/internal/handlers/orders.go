@@ -40,7 +40,9 @@ func (s *UserLoyaltyServer) UploadOrderHandler(w http.ResponseWriter, r *http.Re
 
 	orderNumber, err := strconv.Atoi(string(buffer[:n]))
 	if err != nil || !luhn.Valid(orderNumber) {
-		s.logger.Warn(err.Error(), zap.String("user_id", userID.String()))
+		s.logger.Warn("invalid order number format",
+			zap.String("user_id", userID.String()),
+			zap.String("order_number", string(buffer[:n])))
 		http.Error(w, "invalid order number format", http.StatusUnprocessableEntity)
 		return
 	}

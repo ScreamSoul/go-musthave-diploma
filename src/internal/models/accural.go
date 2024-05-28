@@ -8,7 +8,7 @@ import (
 type Accural struct {
 	Order   int         `json:"order"`
 	Status  OrderStatus `json:"status"`
-	Accrual *int        `json:"accrual,omitempty"`
+	Accrual *float64    `json:"accrual,omitempty"`
 }
 
 func (u *Accural) UnmarshalJSON(data []byte) error {

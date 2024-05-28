@@ -56,7 +56,7 @@ func (s *UserLoyaltyServer) WithdrawWallet(w http.ResponseWriter, r *http.Reques
 	} else if err := json.NewDecoder(r.Body).Decode(&withdraw); err != nil {
 		http.Error(w, "bad body format", http.StatusBadRequest)
 		return
-	} else if !luhn.Valid(withdraw.Order) {
+	} else if !luhn.Valid(int(withdraw.Order)) {
 		http.Error(w, "invalid order number format", http.StatusUnprocessableEntity)
 		return
 	}

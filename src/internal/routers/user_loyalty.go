@@ -18,7 +18,7 @@ func NewUserLoyaltyRouter(
 	r.Use(globalMiddlewares...)
 
 	r.Get("/api/ping", uServer.PingStorage)
-	r.Post("/api/user/registration", uServer.RegistrationHandler)
+	r.Post("/api/user/register", uServer.RegistrationHandler)
 	r.Post("/api/user/login", uServer.LoginHandler)
 
 	r.With(middlewares.LoginRequiredMiddleware).Post("/api/user/orders", uServer.UploadOrderHandler)
