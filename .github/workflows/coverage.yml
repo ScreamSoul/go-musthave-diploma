@@ -24,7 +24,7 @@ jobs:
         uses: codecov/codecov-action@v4.0.1
         with:
             token: ${{ secrets.CODECOV_TOKEN }}
-            slug: ScreamSoul/go-metrics-tpl
+            slug: ScreamSoul/go-musthave-diploma
       - name: Add coverage.html to artifacts
         uses: actions/upload-artifact@v1
         with:
