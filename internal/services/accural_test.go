@@ -95,7 +95,6 @@ func (s *AccuralUpdaterSuite) TestStart() {
 
 			v.mockAccuralRepo(ctx)
 			v.mockLoyaltyRepo(ctx)
-			go accuralUpdater.Start(ctx)
 
 			go func() {
 				defer wg.Done()
