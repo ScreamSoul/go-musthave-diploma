@@ -8,6 +8,8 @@ import (
 	"github.com/screamsoul/go-musthave-diploma/internal/models"
 )
 
+//go:generate minimock -i github.com/screamsoul/go-musthave-diploma/internal/repositories.UserLoyaltyRepository -o ../mocks/loyalty_repo_mock.go -g
+
 type UserLoyaltyRepository interface {
 	Ping(ctx context.Context) bool
 	CreateUser(ctx context.Context, creds *models.Creds) (uuid.UUID, error)

@@ -32,5 +32,6 @@ __debug_*
 
 statictest
 gophermarttest
-gophermart
+gophermart/gophermart
 src/Makefile
+coverage.*

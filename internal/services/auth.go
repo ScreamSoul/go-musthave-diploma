@@ -37,7 +37,7 @@ func (a *tokenService) GenerateToken(payload *models.Claims) *jwt.Token {
 
 func (a *tokenService) GenerateToString(payload *models.Claims) (string, error) {
 	token := a.GenerateToken(payload)
-	tokenString, err := token.SignedString(a.jwtSecret)
+	tokenString, err := token.SignedString([]byte(a.jwtSecret))
 	if err != nil {
 		return "", err
 	}
@@ -77,9 +77,5 @@ func (a *tokenService) GetUserID(tokenString string) (uuid.UUID, error) {
 		return uuid.Nil, err
 	}
 
-	// userIdUUID, ok := .(uuid.UUID)
-	// if !ok {
-	// 	return uuid.Nil, fmt.Errorf("no 'user_id' claim found or invalid UUID format")
-	// }
 	return claims.UserID, nil
 }

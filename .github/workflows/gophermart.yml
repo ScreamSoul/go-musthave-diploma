@@ -47,8 +47,8 @@ jobs:
 
       - name: Prepare binaries
         run: |
-          (cd src/cmd/gophermart && go build -buildvcs=false -o gophermart)
-          (cd src/cmd/accrual && chmod +x accrual_linux_amd64)
+          (cd cmd/gophermart && go build -buildvcs=false -o gophermart)
+          (cd cmd/accrual && chmod +x accrual_linux_amd64)
 
       - name: Test
         run: |
