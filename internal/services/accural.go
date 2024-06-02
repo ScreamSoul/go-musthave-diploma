@@ -56,11 +56,9 @@ func (s *OrderAccuralUpdater) Start(ctx context.Context) {
 				s.logger.Error("Fail UpdateOrderAccural", zap.Error(err))
 				break
 			}
-
-			switch accutalOrder.Status {
-			case models.StatusInvalid, models.StatusProcessed:
+			if accutalOrder.Status.IsFinal() {
 				s.logger.Info("calculate accural finish", zap.Int("order", orderNumber))
-			default:
+			} else {
 				s.logger.Info("wait for the calculations accural to be completed", zap.Int("order", orderNumber))
 
 				go func() {
